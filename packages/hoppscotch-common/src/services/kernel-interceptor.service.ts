@@ -158,6 +158,19 @@ export class KernelInterceptorService extends Service {
     return interceptor.execute(req)
   }
 
+  /**
+   * Execute a request using a specific interceptor identified by its ID.
+   * Falls back to the active interceptor if the requested one is not
+   * available or not in a selectable state.
+   */
+  public executeVia(id: string, req: RelayRequest): ExecutionResult {
+    const interceptor = this.state.interceptors.get(id)
+    if (interceptor && interceptor.selectable.type === "selectable") {
+      return interceptor.execute(req)
+    }
+    return this.execute(req)
+  }
+
   private validateAndGetActiveInterceptor(): KernelInterceptor {
     if (!this.state.currentId) {
       throw new Error("No active interceptor")
