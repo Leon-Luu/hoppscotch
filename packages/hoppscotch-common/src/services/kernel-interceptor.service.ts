@@ -160,7 +160,8 @@ export class KernelInterceptorService extends Service {
 
   /**
    * Execute a request using a specific interceptor identified by its ID.
-   * Falls back to the active interceptor if the requested one is not available.
+   * Falls back to the active interceptor if the requested one is not
+   * available or not in a selectable state.
    */
   public executeVia(id: string, req: RelayRequest): ExecutionResult {
     const interceptor = this.state.interceptors.get(id)
