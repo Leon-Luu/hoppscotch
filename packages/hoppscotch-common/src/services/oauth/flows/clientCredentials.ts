@@ -16,6 +16,21 @@ import { ClientCredentialsGrantTypeParams } from "@hoppscotch/data"
 
 const interceptorService = getService(KernelInterceptorService)
 
+/**
+ * Execute OAuth token requests, bypassing the browser extension interceptor
+ * when it is active. Chrome's service worker fetch() adds Origin and
+ * Sec-Fetch-* headers that many OAuth servers reject. Route through the
+ * proxy interceptor instead, which makes server-side requests without
+ * browser headers and without CORS restrictions.
+ */
+const executeOAuthTokenRequest = (request: RelayRequest) => {
+  const currentId = interceptorService.getCurrentId()
+  if (currentId === "extension") {
+    return interceptorService.executeVia("proxy", request)
+  }
+  return interceptorService.execute(request)
+}
+
 // Use the existing schema from hoppscotch-data but add client authentication mode
 const ClientCredentialsFlowParamsSchema = ClientCredentialsGrantTypeParams.omit(
   {
@@ -67,7 +82,7 @@ const initClientCredentialsOAuthFlow = async (
       ? getPayloadForViaBasicAuthHeader(payload)
       : getPayloadForViaBody(payload)
 
-  const { response } = interceptorService.execute(requestPayload)
+  const { response } = executeOAuthTokenRequest(requestPayload)
 
   const res = await response
 
@@ -130,7 +145,7 @@ const handleRedirectForAuthCodeOauthFlow = async (localConfig: string) => {
     return E.left("INVALID_STATE")
   }
 
-  const { response } = interceptorService.execute({
+  const { response } = executeOAuthTokenRequest({
     id: Date.now(),
     url: decodedLocalConfig.data.tokenEndpoint,
     method: "POST",
