@@ -134,7 +134,7 @@ export class InfraResolver {
     @Args({
       name: 'searchString',
       nullable: true,
-      description: 'Search on team name',
+      description: 'Search on team name or ID',
     })
     searchString: string,
     @Args() paginationOption: OffsetPaginationArgs,

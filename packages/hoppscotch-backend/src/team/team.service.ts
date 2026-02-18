@@ -538,7 +538,7 @@ export class TeamService implements UserDataHandler, OnModuleInit {
 
   /**
    * Fetch all the teams in the `Team` table with offset pagination and search
-   * @param searchString search on team name
+   * @param searchString search on team name or ID
    * @param paginationOption pagination options
    * @returns an array of `Team` object
    */
