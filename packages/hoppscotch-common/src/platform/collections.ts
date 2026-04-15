@@ -3,7 +3,7 @@ import { ReqType } from "~/helpers/backend/graphql"
 import * as E from "fp-ts/Either"
 
 export type CollectionsPlatformDef = {
-  initCollectionsSync: () => void
+  initCollectionsSync: () => void | Promise<void>
   loadUserCollections?: (collectionType: "REST" | "GQL") => Promise<void>
   importToPersonalWorkspace?: (
     collections: HoppCollection[],

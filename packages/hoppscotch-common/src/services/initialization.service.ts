@@ -159,11 +159,18 @@ export class InitializationService extends Service<InitEvent> {
 
   public async initAuthAndSync() {
     await this.initAuth()
+    // Load persisted local state BEFORE sync so that backend (source of truth)
+    // overwrites stale local data, not the other way around.
+    // This prevents the race condition where local persistence overwrites
+    // collections already fetched from the backend (fixes #6138).
+    await this.initPersistenceLater()
     await this.initSync()
   }
 
   public async initPost() {
-    await this.initPersistenceLater()
+    if (!this.initState.persistenceLater) {
+      await this.initPersistenceLater()
+    }
     performMigrations()
   }
 

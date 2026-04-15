@@ -69,18 +69,25 @@ import * as E from "fp-ts/Either"
 import { gqlCollectionsSyncer } from "./gqlCollections.sync"
 import { importToPersonalWorkspace } from "./import"
 
-function initCollectionsSync() {
+async function initCollectionsSync() {
   const currentUser$ = platformAuth.getCurrentUserStream()
+  const currentUser = platformAuth.getCurrentUser()
+
+  // Load collections from backend FIRST (server is source of truth)
+  // This must complete before starting store sync to prevent stale local
+  // data from being pushed to the backend (race condition fix for #6138)
+  // Only do the initial awaited load when a user is already authenticated.
+  // When logged out, rely on the currentUser$ subscription to fetch after login.
+  if (currentUser) {
+    await Promise.all([loadUserCollections("REST"), loadUserCollections("GQL")])
+  }
+
+  // Only start sync watchers after backend data is loaded
   collectionsSyncer.startStoreSync()
   collectionsSyncer.setupSubscriptions(setupSubscriptions)
 
   gqlCollectionsSyncer.startStoreSync()
 
-  // TODO: fix collection schema transformation on backend maybe?
-  loadUserCollections("REST")
-  loadUserCollections("GQL")
-
-  // TODO: test & make sure the auth thing is working properly
   currentUser$.subscribe(async (user) => {
     if (user) {
       loadUserCollections("REST")
